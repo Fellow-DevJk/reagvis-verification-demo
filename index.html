@@ -25,8 +25,14 @@
 
         <nav class="nav" aria-label="Demo views">
           <a href="#applicant" data-view-link="applicant">Applicant flow</a>
-          <a href="#client" data-view-link="client">Client dashboard</a>
-          <a href="#operator" data-view-link="operator">Reagvis console</a>
+          <a href="#overview" data-view-link="overview">Overview</a>
+          <a href="#trace" data-view-link="trace">Live trace</a>
+          <a href="#providers" data-view-link="providers">Providers</a>
+          <a href="#verifications" data-view-link="verifications">Verifications</a>
+          <a href="#webhooks" data-view-link="webhooks">Webhooks</a>
+          <a href="#sandbox" data-view-link="sandbox">Sandbox</a>
+          <a href="#audit" data-view-link="audit">Audit log</a>
+          <a href="#queue" data-view-link="queue">Review queue</a>
         </nav>
 
         <section class="status-card">
@@ -109,27 +115,95 @@
           </article>
         </section>
 
-        <section id="client" class="view">
+        <section id="overview" class="view">
           <div class="section-head">
             <div>
               <span class="eyebrow">Business customer</span>
-              <h2>Client dashboard</h2>
+              <h2>Overview</h2>
             </div>
-            <button class="ghost" data-refresh-dashboard="client">Refresh</button>
+            <button class="ghost" data-refresh-dashboard="overview">Refresh</button>
           </div>
-          <div id="clientDashboard" class="dashboard"></div>
+          <div id="overviewDashboard" class="dashboard"></div>
         </section>
 
-        <section id="operator" class="view">
+        <section id="trace" class="view">
+          <div class="section-head">
+            <div>
+              <span class="eyebrow">Live trace</span>
+              <h2>Verification in flight</h2>
+            </div>
+            <button class="ghost" id="traceReplayButton">Replay latest</button>
+          </div>
+          <div id="traceDashboard" class="dashboard"></div>
+        </section>
+
+        <section id="providers" class="view">
+          <div class="section-head">
+            <div>
+              <span class="eyebrow">Provider registry</span>
+              <h2>Providers</h2>
+            </div>
+            <button class="ghost" data-refresh-dashboard="providers">Refresh</button>
+          </div>
+          <div id="providersDashboard" class="dashboard"></div>
+        </section>
+
+        <section id="verifications" class="view">
+          <div class="section-head">
+            <div>
+              <span class="eyebrow">Customer sessions</span>
+              <h2>Verifications</h2>
+            </div>
+            <button class="ghost" data-refresh-dashboard="verifications">Refresh</button>
+          </div>
+          <div id="verificationsDashboard" class="dashboard"></div>
+        </section>
+
+        <section id="webhooks" class="view">
+          <div class="section-head">
+            <div>
+              <span class="eyebrow">Delivery</span>
+              <h2>Webhooks</h2>
+            </div>
+            <button class="ghost" data-refresh-dashboard="webhooks">Refresh</button>
+          </div>
+          <div id="webhooksDashboard" class="dashboard"></div>
+        </section>
+
+        <section id="sandbox" class="view">
+          <div class="section-head">
+            <div>
+              <span class="eyebrow">Scenario lab</span>
+              <h2>Sandbox</h2>
+            </div>
+            <button class="ghost" id="sandboxSeedButton">Seed storyline</button>
+          </div>
+          <div id="sandboxDashboard" class="dashboard"></div>
+        </section>
+
+        <section id="audit" class="view">
+          <div class="section-head">
+            <div>
+              <span class="eyebrow">Immutable trail</span>
+              <h2>Audit log</h2>
+            </div>
+            <button class="ghost" data-refresh-dashboard="audit">Refresh</button>
+          </div>
+          <div id="auditDashboard" class="dashboard"></div>
+        </section>
+
+        <section id="queue" class="view">
           <div class="section-head">
             <div>
               <span class="eyebrow">Reagvis internal</span>
-              <h2>Operator console</h2>
+              <h2>Review queue</h2>
             </div>
-            <button class="ghost" data-refresh-dashboard="operator">Refresh</button>
+            <button class="ghost" data-refresh-dashboard="queue">Refresh</button>
           </div>
-          <div id="operatorDashboard" class="dashboard"></div>
+          <div id="queueDashboard" class="dashboard"></div>
         </section>
+
+        <aside id="detailDrawer" class="drawer" aria-live="polite"></aside>
       </main>
     </div>
 
