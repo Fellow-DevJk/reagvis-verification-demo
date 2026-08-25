@@ -36,9 +36,9 @@
         </section>
 
         <section class="status-card muted">
-          <span class="eyebrow">Scope</span>
+          <span class="eyebrow">Environment</span>
           <p>
-            Demo-only AWS stack. Mock providers, no real KYC credentials, no outbound customer webhooks.
+            Sandbox mode. Provider rails are configured for deterministic test outcomes until issued credentials arrive.
           </p>
         </section>
       </aside>
@@ -56,6 +56,10 @@
           <div class="hero-card">
             <span>Live demo API</span>
             <code id="heroEndpoint">loading...</code>
+            <div class="button-stack compact">
+              <button id="seedDemoButton">Seed clean storyline</button>
+              <button id="resetDemoButton">Reset tenant data</button>
+            </div>
           </div>
         </section>
 
@@ -92,6 +96,17 @@
               </div>
             </aside>
           </div>
+
+          <article class="trace-panel">
+            <div class="section-head">
+              <div>
+                <span class="eyebrow">Live trace</span>
+                <h2>Verification in flight</h2>
+              </div>
+              <button class="ghost" id="replayLatestButton">Replay latest</button>
+            </div>
+            <div id="liveTrace"></div>
+          </article>
         </section>
 
         <section id="client" class="view">

@@ -12,18 +12,18 @@ const state = {
 const providers = {
   digilocker: {
     label: "DigiLocker",
-    description: "We simulate an OAuth consent redirect, callback, signed document pull, and normalized result.",
-    rails: ["Create Reagvis verification", "Generate mock state", "Receive simulated callback", "Normalize documents"],
+    description: "OAuth-style consent, callback correlation, document retrieval, and normalized result on the DigiLocker rail.",
+    rails: ["Create Reagvis verification", "Generate state", "Receive callback", "Normalize documents"],
   },
   aadhaar_ekyc: {
     label: "Aadhaar e-KYC",
-    description: "We simulate OTP/authentication, ASA/KSA transport, UIDAI response validation, and normalized identity.",
-    rails: ["Create Reagvis verification", "Build mock auth request", "Receive mock UIDAI response", "Normalize identity"],
+    description: "OTP/authentication, ASA/KSA transport boundary, UIDAI response handling, and normalized identity result.",
+    rails: ["Create Reagvis verification", "Build auth request", "Receive provider response", "Normalize identity"],
   },
   document_upload: {
     label: "Manual document upload",
-    description: "We run browser-side intake checks before sending metadata to the mock verification backend.",
-    rails: ["Check file size/type", "Check file signature", "Estimate image quality", "Submit mock processing request"],
+    description: "Browser-side intake checks before the document is submitted into the verification lifecycle.",
+    rails: ["Check file size/type", "Check file signature", "Estimate image quality", "Submit for processing"],
   },
 };
 
@@ -102,6 +102,7 @@ function renderStep(step = state.step) {
         .join("")}
     `;
     root.append(fragment);
+    renderLiveTrace(record);
   }
 }
 
@@ -305,6 +306,65 @@ async function runApplicantScenario(provider, scenario, metadata = {}) {
   refreshOperatorDashboard();
 }
 
+function renderLiveTrace(record = state.latestVerification) {
+  const root = $("#liveTrace");
+  if (!root) return;
+  if (!record) {
+    root.innerHTML = `
+      <div class="trace-strip">
+        ${["Customer App", "Reagvis API", "Verification Engine", "Provider Adapter", "Provider", "Normalized Result", "Webhook"].map((label, index) => traceNode(label, index, "created")).join("")}
+      </div>
+      <div class="trace-footer"><strong>Total --</strong><span>Run a scenario to see this fill with live backend events.</span><span class="pill">READY</span></div>
+    `;
+    return;
+  }
+
+  const labels = traceLabels(record.provider);
+  const status = record.status;
+  const traceEvents = record.trace_events || [];
+  root.innerHTML = `
+    <div class="trace-strip">
+      ${labels.map((label, index) => traceNode(label, index, index === labels.length - 1 ? "delivery" : status)).join("")}
+    </div>
+    <div class="trace-footer">
+      <strong>${durationLabel(record)}</strong>
+      <span>${traceSummary(record)}</span>
+      <span class="pill">${status.replaceAll("_", " ").toUpperCase()}</span>
+    </div>
+    <div class="dashboard-card">
+      <h3>State</h3>
+      <div class="table">
+        ${traceEvents.map((event) => row(event.event, event.state, event.occurred_at?.slice(11, 23) || "")).join("")}
+      </div>
+    </div>
+  `;
+}
+
+function traceLabels(provider) {
+  if (provider === "digilocker") return ["Customer App", "Reagvis API", "Verification Engine", "DigiLocker Adapter", "DigiLocker", "Normalized Result", "Webhook"];
+  if (provider === "aadhaar_ekyc") return ["Customer App", "Reagvis API", "Verification Engine", "AUA/KUA Adapter", "ASA/KSA", "Normalized Result", "Webhook"];
+  return ["Customer App", "Reagvis API", "Verification Engine", "Upload Intake", "Document Processor", "Normalized Result", "Webhook"];
+}
+
+function traceNode(label, index, status) {
+  const tag = ["origin", "ingress", "routing", "adapter", "provider", "egress", "delivery"][index] || "step";
+  const className = index === 6 ? "delivery" : status === "failed" || status === "requires_review" ? status : "";
+  return `<div class="trace-node ${className}"><small>${tag}</small><strong>${label}</strong></div>`;
+}
+
+function traceSummary(record) {
+  if (record.status === "verified") return "Routed through provider, normalized, and delivered to the customer dashboard.";
+  if (record.status === "requires_review") return "Routed into the operator queue with audit trail and customer-visible review state.";
+  if (record.status === "failed") return `Provider or intake failure captured as ${record.failure_code || "failed"}.`;
+  return "Verification is moving through the common lifecycle.";
+}
+
+function durationLabel(record) {
+  if (!record.completed_at) return "Total --";
+  const ms = Date.parse(record.completed_at) - Date.parse(record.created_at);
+  return `Total ${(ms / 1000).toFixed(2)}s`;
+}
+
 async function refreshClientDashboard() {
   const root = $("#clientDashboard");
   root.innerHTML = `<div class="dashboard-card">Loading dashboard...</div>`;
@@ -367,6 +427,31 @@ function row(a, b, c) {
   return `<div class="row"><span>${a}</span><small>${b}</small><code>${c}</code></div>`;
 }
 
+async function seedDemo() {
+  const res = await fetch(`${API_BASE}/v1/demo/seed`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+  });
+  if (!res.ok) throw new Error(`Seed failed: ${res.status}`);
+  const body = await res.json();
+  state.latestVerification = body.verifications?.[0] || null;
+  renderStep("result");
+  setView("operator");
+  await refreshClientDashboard();
+  await refreshOperatorDashboard();
+}
+
+async function resetDemo() {
+  const res = await fetch(`${API_BASE}/v1/demo/reset`, { method: "DELETE" });
+  if (!res.ok) throw new Error(`Reset failed: ${res.status}`);
+  state.latestVerification = null;
+  state.upload = null;
+  renderStep("start");
+  renderLiveTrace(null);
+  await refreshClientDashboard();
+  await refreshOperatorDashboard();
+}
+
 async function fetchJson(path) {
   const res = await fetch(`${API_BASE}${path}`);
   if (!res.ok) throw new Error(`${res.status}`);
@@ -404,6 +489,30 @@ document.addEventListener("click", async (event) => {
     state.upload = null;
     state.latestVerification = null;
     renderStep("start");
+    renderLiveTrace(null);
+  }
+
+  if (event.target.id === "seedDemoButton") {
+    event.target.disabled = true;
+    try {
+      await seedDemo();
+    } finally {
+      event.target.disabled = false;
+    }
+  }
+
+  if (event.target.id === "resetDemoButton") {
+    event.target.disabled = true;
+    try {
+      await resetDemo();
+      setView("applicant");
+    } finally {
+      event.target.disabled = false;
+    }
+  }
+
+  if (event.target.id === "replayLatestButton") {
+    renderLiveTrace(state.latestVerification);
   }
 
   if (event.target.id === "providerSubmitButton") {
@@ -446,6 +555,7 @@ window.addEventListener("hashchange", () => {
 
 renderStep("start");
 setView((location.hash || "#applicant").replace("#", ""));
+renderLiveTrace(null);
 checkHealth();
 refreshClientDashboard();
 refreshOperatorDashboard();
