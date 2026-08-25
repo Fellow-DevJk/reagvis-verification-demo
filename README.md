@@ -12,7 +12,7 @@ It shows these views:
 - Webhooks: simulated customer delivery log.
 - Sandbox: deterministic scenario launcher.
 - Audit log: audit-event timeline.
-- Review queue: internal/manual review queue with local decision UI.
+- Review queue: internal/manual review queue with persisted approve/reject decisions.
 
 The app currently points at the isolated demo API:
 
@@ -30,7 +30,8 @@ This backend is demo-only. It uses mock providers, DynamoDB demo tables, simulat
 4. Click any verification row to open the detail drawer.
 5. Use `Open trace` from the drawer, or go to `Live trace`, to show the provider-adapter journey.
 6. Use `Providers`, `Webhooks`, `Audit log`, and `Review queue` for deeper product walkthroughs.
-7. Use `Reset tenant data` when the public demo gets noisy.
+7. Approve or reject a review case to show the queue, audit trail, webhook log, and dashboards updating from the backend.
+8. Use `Reset tenant data` when the public demo gets noisy.
 
 ## Run Locally
 

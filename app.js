@@ -584,10 +584,10 @@ function casePreview(item) {
         <p><strong>${escapeHtml(item.customer_reference)}</strong></p>
         <p class="muted-copy">${escapeHtml(providerLabel(item.provider))} · ${escapeHtml(item.scenario)}</p>
         <div class="decision-row">
-          <button class="primary" data-review-action="approve">Approve</button>
-          <button class="ghost" data-review-action="reject">Reject</button>
+          <button class="primary" data-review-decision="approved" data-review-id="${escapeHtml(item.verification_id)}">Approve</button>
+          <button class="ghost" data-review-decision="rejected" data-review-id="${escapeHtml(item.verification_id)}">Reject</button>
         </div>
-        <p id="reviewActionNote" class="muted-copy">Decision buttons are local UI for now; backend review mutation is the next slice.</p>
+        <p id="reviewActionNote" class="muted-copy">Decision writes to the sandbox backend and updates the queue.</p>
       </div>
     </div>
   `;
@@ -631,6 +631,12 @@ function renderDrawer(record) {
       <button class="primary" data-go-trace="${escapeHtml(record.verification_id)}">Open trace</button>
       <button class="ghost" data-copy-id="${escapeHtml(record.verification_id)}">Copy ID</button>
     </div>
+    ${record.status === "requires_review" ? `
+      <div class="decision-row">
+        <button class="primary" data-review-decision="approved" data-review-id="${escapeHtml(record.verification_id)}">Approve review</button>
+        <button class="ghost" data-review-decision="rejected" data-review-id="${escapeHtml(record.verification_id)}">Reject review</button>
+      </div>
+    ` : ""}
     <h3>Normalized result</h3>
     <div class="result-card">${Object.entries(checks).map(([name, check]) => checkRow(name, check)).join("") || "<p>No terminal result yet.</p>"}</div>
     <h3>Provider transaction</h3>
@@ -666,6 +672,26 @@ async function resetDemo() {
   renderStep("start");
   renderLiveTrace(null, $("#liveTrace"));
   await refreshCurrentDashboards();
+}
+
+async function submitReviewDecision(id, decision) {
+  const res = await fetch(`${API_BASE}/v1/verifications/${encodeURIComponent(id)}/review-decision`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      decision,
+      reviewed_by: "demo-reviewer",
+      note: decision === "approved" ? "Approved from Reagvis console." : "Rejected from Reagvis console.",
+    }),
+  });
+  if (!res.ok) throw new Error(`Review decision failed: ${res.status} ${await res.text()}`);
+  const record = await res.json();
+  state.selectedVerification = record;
+  state.latestVerification = record;
+  renderDrawer(record);
+  if (state.view === "trace") renderLiveTrace(record, $("#tracePageBody"));
+  await refreshCurrentDashboards();
+  return record;
 }
 
 async function refreshCurrentDashboards() {
@@ -803,10 +829,19 @@ document.addEventListener("click", async (event) => {
     }
   }
 
-  const reviewAction = event.target.closest("[data-review-action]");
-  if (reviewAction) {
+  const reviewDecision = event.target.closest("[data-review-decision]");
+  if (reviewDecision) {
+    reviewDecision.disabled = true;
     const note = $("#reviewActionNote");
-    if (note) note.textContent = `Local ${reviewAction.dataset.reviewAction} decision captured in the UI. Backend decision endpoint is the next real slice.`;
+    if (note) note.textContent = "Submitting decision...";
+    try {
+      await submitReviewDecision(reviewDecision.dataset.reviewId, reviewDecision.dataset.reviewDecision);
+      if (note) note.textContent = "Decision saved.";
+    } catch (err) {
+      if (note) note.textContent = err.message;
+    } finally {
+      reviewDecision.disabled = false;
+    }
   }
 });
 
