@@ -216,6 +216,14 @@ main {
   overflow-wrap: anywhere;
 }
 
+.hero-card strong {
+  display: block;
+  color: var(--lime);
+  font-size: 25px;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+}
+
 .eyebrow {
   display: block;
   color: var(--grey);

@@ -19,7 +19,7 @@ const providers = {
     label: "DigiLocker",
     short: "DL",
     accent: "blue",
-    description: "OAuth-style consent, callback correlation, document retrieval, and normalized result on the DigiLocker rail.",
+    description: "Consent, callback correlation, document retrieval, and normalized result on the DigiLocker rail.",
     rails: ["Create Reagvis verification", "Generate state", "Receive callback", "Normalize documents"],
     config: ["OAuth callback", "State validation", "Token exchange interface", "Document normalizer"],
   },
@@ -159,8 +159,8 @@ function resultDescription(record) {
 }
 
 async function checkHealth() {
-  $("#apiEndpointLabel").textContent = API_BASE;
-  $("#heroEndpoint").textContent = API_BASE;
+  $("#apiEndpointLabel").textContent = "Verification service";
+  $("#heroEndpoint").textContent = "Connected verification workflow";
   try {
     const res = await fetch(`${API_BASE}/health`);
     const body = await res.json();
@@ -282,7 +282,7 @@ function renderValidation(result) {
         <span><strong>${escapeHtml(check.label)}</strong><br>${escapeHtml(check.detail)}</span>
       </div>
     `).join("")}
-    ${result.hardFailed ? `<div class="validation-item fail"><span class="dot"></span><span><strong>Submission blocked</strong><br>Choose another file or run this outcome from Sandbox.</span></div>` : ""}
+    ${result.hardFailed ? `<div class="validation-item fail"><span class="dot"></span><span><strong>Submission blocked</strong><br>Choose another file or launch this outcome from Scenario lab.</span></div>` : ""}
   `;
   $("#submitUploadButton").disabled = result.hardFailed;
 }
@@ -448,9 +448,9 @@ function renderLiveTrace(record = state.latestVerification, root = $("#liveTrace
 }
 
 function traceLabels(provider) {
-  if (provider === "digilocker") return ["Customer App", "Reagvis API", "Verification Engine", "DigiLocker Adapter", "DigiLocker", "Normalized Result", "Webhook"];
-  if (provider === "aadhaar_ekyc") return ["Customer App", "Reagvis API", "Verification Engine", "AUA/KUA Adapter", "ASA/KSA", "Normalized Result", "Webhook"];
-  return ["Customer App", "Reagvis API", "Verification Engine", "Upload Intake", "Document Processor", "Normalized Result", "Webhook"];
+  if (provider === "digilocker") return ["Customer App", "Reagvis Gateway", "Verification Engine", "DigiLocker Connector", "DigiLocker", "Verified Result", "Webhook"];
+  if (provider === "aadhaar_ekyc") return ["Customer App", "Reagvis Gateway", "Verification Engine", "Aadhaar Connector", "Aadhaar Network", "Verified Result", "Webhook"];
+  return ["Customer App", "Reagvis Gateway", "Verification Engine", "Upload Intake", "Document Processor", "Verified Result", "Webhook"];
 }
 
 function traceNode(label, index, status) {
@@ -479,7 +479,7 @@ async function renderOverview() {
   const data = await fetchJson("/v1/dashboard/client");
   root.innerHTML = `
     <div class="kpi-grid">
-      ${kpi("Verifications", data.summary.total, "All sandbox requests accepted")}
+      ${kpi("Verifications", data.summary.total, "Accepted by verification service")}
       ${kpi("Verified", data.summary.verified, "Normalized result delivered")}
       ${kpi("Review", data.summary.requires_review, "Human decision required")}
       ${kpi("Active providers", data.provider_health.filter((p) => p.status === "operational").length, "Rails configured")}
@@ -559,7 +559,7 @@ async function renderWebhooks() {
       ${kpi("Deliveries", data.webhook_deliveries.length, "Recent attempts")}
       ${kpi("Delivered", data.webhook_deliveries.filter((d) => d.status === "delivered").length, "Customer received")}
       ${kpi("Retries", data.webhook_deliveries.filter((d) => d.status === "retry_scheduled").length, "Backoff scheduled")}
-      ${kpi("Endpoint", "1", "customer.example")}
+      ${kpi("Destination", "1", "Customer webhook")}
     </div>
     <div class="dashboard-card">
       <h3>Delivery log</h3>
@@ -573,7 +573,7 @@ function renderSandbox() {
   root.innerHTML = `
     <div class="dashboard-card">
       <h3>Create verification</h3>
-      <p class="muted-copy">These buttons call the live sandbox API and create real demo records in DynamoDB.</p>
+      <p class="muted-copy">Launch repeatable verification paths for product walkthroughs. Each run creates a real case in the shared caseload.</p>
       <div class="scenario-grid">
         ${scenarios.map(([id, title, desc]) => `
           <button class="scenario-card" data-sandbox-run="${id}">
@@ -646,7 +646,7 @@ function verificationRow(item) {
 }
 
 function providerHealthRow(item) {
-  return `<div class="row" role="button" tabindex="0" data-provider-detail="${escapeHtml(item.provider)}"><span>${escapeHtml(item.label)}</span><small>${item.mode === "mock" ? "Sandbox" : escapeHtml(item.mode)}</small><code>${escapeHtml(item.volume)} sessions</code></div>`;
+  return `<div class="row" role="button" tabindex="0" data-provider-detail="${escapeHtml(item.provider)}"><span>${escapeHtml(item.label)}</span><small>${item.mode === "mock" ? "Configured" : escapeHtml(item.mode)}</small><code>${escapeHtml(item.volume)} sessions</code></div>`;
 }
 
 function providerCard(item) {
@@ -655,7 +655,7 @@ function providerCard(item) {
     <button class="provider-card ${meta.accent}" data-provider-detail="${escapeHtml(item.provider)}">
       <span>${escapeHtml(meta.short)}</span>
       <strong>${escapeHtml(item.label)}</strong>
-      <small>${item.mode === "mock" ? "Sandbox rail" : escapeHtml(item.mode)} · ${escapeHtml(item.volume)} sessions · ${escapeHtml(item.median_latency_ms)}ms median</small>
+      <small>${item.mode === "mock" ? "Provider-ready rail" : escapeHtml(item.mode)} · ${escapeHtml(item.volume)} sessions · ${escapeHtml(item.median_latency_ms)}ms median</small>
     </button>
   `;
 }
@@ -684,7 +684,7 @@ function casePreview(item) {
           <button class="primary" data-review-decision="approved" data-review-id="${escapeHtml(item.verification_id)}">Approve</button>
           <button class="ghost" data-review-decision="rejected" data-review-id="${escapeHtml(item.verification_id)}">Reject</button>
         </div>
-        <p id="reviewActionNote" class="muted-copy">Decision writes to the sandbox backend and updates the queue.</p>
+        <p id="reviewActionNote" class="muted-copy">Decision writes to the review service and updates the queue.</p>
       </div>
     </div>
   `;

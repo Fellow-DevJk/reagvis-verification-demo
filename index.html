@@ -30,21 +30,21 @@
           <a href="#providers" data-view-link="providers">Providers</a>
           <a href="#verifications" data-view-link="verifications">Verifications</a>
           <a href="#webhooks" data-view-link="webhooks">Webhooks</a>
-          <a href="#sandbox" data-view-link="sandbox">Sandbox</a>
+          <a href="#sandbox" data-view-link="sandbox">Scenario lab</a>
           <a href="#audit" data-view-link="audit">Audit log</a>
           <a href="#queue" data-view-link="queue">Review queue</a>
         </nav>
 
         <section class="status-card">
-          <span class="eyebrow">Backend</span>
+          <span class="eyebrow">Service</span>
           <strong id="healthLabel">Checking...</strong>
-          <small id="apiEndpointLabel"></small>
+          <small id="apiEndpointLabel">Verification service</small>
         </section>
 
         <section class="status-card muted">
           <span class="eyebrow">Environment</span>
           <p>
-            Sandbox mode. Provider rails are configured for deterministic test outcomes until issued credentials arrive.
+            Preview mode. Provider rails are configured for controlled walkthrough outcomes until issued credentials arrive.
           </p>
         </section>
       </aside>
@@ -60,11 +60,11 @@
             </p>
           </div>
           <div class="hero-card">
-            <span>Sandbox API</span>
-            <code id="heroEndpoint">loading...</code>
+            <span>Live Workflow</span>
+            <strong id="heroEndpoint">Verification service</strong>
             <div class="button-stack compact">
-              <button id="seedDemoButton">Seed clean storyline</button>
-              <button id="resetDemoButton">Reset tenant data</button>
+              <button id="seedDemoButton">Load sample caseload</button>
+              <button id="resetDemoButton">Reset caseload</button>
             </div>
           </div>
         </section>
@@ -88,10 +88,10 @@
             </article>
 
             <aside class="panel">
-              <span class="eyebrow">Sandbox</span>
+              <span class="eyebrow">Presenter controls</span>
               <h3>Trigger a verification path</h3>
               <p>
-                The result is deterministic. Good upload quality maps to a success scenario; weak capture
+                The result is controlled for repeatable walkthroughs. Good upload quality maps to a success scenario; weak capture
                 quality maps to manual review; provider rail problems map to explicit failures.
               </p>
               <div class="button-stack">
@@ -174,9 +174,9 @@
           <div class="section-head">
             <div>
               <span class="eyebrow">Scenario lab</span>
-              <h2>Sandbox</h2>
+              <h2>Scenario lab</h2>
             </div>
-            <button class="ghost" id="sandboxSeedButton">Seed storyline</button>
+            <button class="ghost" id="sandboxSeedButton">Load sample caseload</button>
           </div>
           <div id="sandboxDashboard" class="dashboard"></div>
         </section>
@@ -215,7 +215,7 @@
         <ul class="check-list">
           <li>Use DigiLocker for fastest verification.</li>
           <li>Use Aadhaar e-KYC when OTP authentication is available.</li>
-          <li>Upload a document when provider rails are unavailable.</li>
+          <li>Upload a document when assisted document review is preferred.</li>
         </ul>
         <button class="primary" data-next-step="method">Get started</button>
       </div>
@@ -228,11 +228,11 @@
         <div class="method-list">
           <button data-provider="digilocker">
             <strong>DigiLocker</strong>
-            <small>OAuth consent and signed document retrieval through the sandbox rail.</small>
+            <small>OAuth consent and signed document retrieval through the DigiLocker rail.</small>
           </button>
           <button data-provider="aadhaar_ekyc">
             <strong>Aadhaar e-KYC</strong>
-            <small>OTP/authentication and normalized identity result through the sandbox rail.</small>
+            <small>OTP/authentication and normalized identity result through the Aadhaar rail.</small>
           </button>
           <button data-provider="document_upload">
             <strong>Manual document upload</strong>
