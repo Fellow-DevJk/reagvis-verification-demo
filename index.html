@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Reagvis Verification Demo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="shell">
+      <aside class="rail">
+        <a class="brand" href="#applicant" aria-label="Reagvis home">
+          <span class="brand-mark">R</span>
+          <span>
+            <strong>Reagvis</strong>
+            <small>verification demo</small>
+          </span>
+        </a>
+
+        <nav class="nav" aria-label="Demo views">
+          <a href="#applicant" data-view-link="applicant">Applicant flow</a>
+          <a href="#client" data-view-link="client">Client dashboard</a>
+          <a href="#operator" data-view-link="operator">Reagvis console</a>
+        </nav>
+
+        <section class="status-card">
+          <span class="eyebrow">Backend</span>
+          <strong id="healthLabel">Checking...</strong>
+          <small id="apiEndpointLabel"></small>
+        </section>
+
+        <section class="status-card muted">
+          <span class="eyebrow">Scope</span>
+          <p>
+            Demo-only AWS stack. Mock providers, no real KYC credentials, no outbound customer webhooks.
+          </p>
+        </section>
+      </aside>
+
+      <main>
+        <section class="hero">
+          <div>
+            <span class="eyebrow">Plug-and-play provider readiness</span>
+            <h1>One verification journey, three provider rails.</h1>
+            <p>
+              Show how an applicant verifies, what a customer sees, and what Reagvis operators monitor while
+              DigiLocker, Aadhaar e-KYC, and manual uploads remain replaceable provider adapters.
+            </p>
+          </div>
+          <div class="hero-card">
+            <span>Live demo API</span>
+            <code id="heroEndpoint">loading...</code>
+          </div>
+        </section>
+
+        <section id="applicant" class="view active">
+          <div class="section-head">
+            <div>
+              <span class="eyebrow">Applicant</span>
+              <h2>Embedded verification flow</h2>
+            </div>
+            <button class="ghost" id="resetFlowButton">Reset flow</button>
+          </div>
+
+          <div class="applicant-grid">
+            <article class="phone">
+              <div class="phone-top">
+                <span>9:41</span>
+                <span class="pill">Meridian Bank</span>
+              </div>
+              <div class="phone-body" id="phoneBody"></div>
+            </article>
+
+            <aside class="panel">
+              <span class="eyebrow">Demo controls</span>
+              <h3>Pick the outcome we want to tell</h3>
+              <p>
+                The backend result is deterministic. Good upload quality maps to a success scenario; weak capture
+                quality maps to manual review; provider rail problems map to explicit failures.
+              </p>
+              <div class="button-stack">
+                <button data-quick-run="success">Run clean success</button>
+                <button data-quick-run="document_blurry">Run upload quality review</button>
+                <button data-quick-run="aadhaar_auth_failed">Run Aadhaar auth failure</button>
+                <button data-quick-run="provider_timeout">Run provider timeout</button>
+              </div>
+            </aside>
+          </div>
+        </section>
+
+        <section id="client" class="view">
+          <div class="section-head">
+            <div>
+              <span class="eyebrow">Business customer</span>
+              <h2>Client dashboard</h2>
+            </div>
+            <button class="ghost" data-refresh-dashboard="client">Refresh</button>
+          </div>
+          <div id="clientDashboard" class="dashboard"></div>
+        </section>
+
+        <section id="operator" class="view">
+          <div class="section-head">
+            <div>
+              <span class="eyebrow">Reagvis internal</span>
+              <h2>Operator console</h2>
+            </div>
+            <button class="ghost" data-refresh-dashboard="operator">Refresh</button>
+          </div>
+          <div id="operatorDashboard" class="dashboard"></div>
+        </section>
+      </main>
+    </div>
+
+    <template id="startTemplate">
+      <div class="step">
+        <span class="eyebrow">Step 1 of 4</span>
+        <h2>Let's confirm it's you</h2>
+        <p>Meridian Bank uses Reagvis to verify your identity before account activation.</p>
+        <ul class="check-list">
+          <li>Use DigiLocker for fastest verification.</li>
+          <li>Use Aadhaar e-KYC when OTP authentication is available.</li>
+          <li>Upload a document when provider rails are unavailable.</li>
+        </ul>
+        <button class="primary" data-next-step="method">Get started</button>
+      </div>
+    </template>
+
+    <template id="methodTemplate">
+      <div class="step">
+        <span class="eyebrow">Step 2 of 4</span>
+        <h2>Choose a verification method</h2>
+        <div class="method-list">
+          <button data-provider="digilocker">
+            <strong>DigiLocker</strong>
+            <small>Mock OAuth consent and signed document retrieval.</small>
+          </button>
+          <button data-provider="aadhaar_ekyc">
+            <strong>Aadhaar e-KYC</strong>
+            <small>Mock OTP/authentication and normalized identity result.</small>
+          </button>
+          <button data-provider="document_upload">
+            <strong>Manual document upload</strong>
+            <small>Local quality checks before mock backend verification.</small>
+          </button>
+        </div>
+      </div>
+    </template>
+
+    <template id="uploadTemplate">
+      <div class="step">
+        <span class="eyebrow">Step 3 of 4</span>
+        <h2>Upload your ID document</h2>
+        <p>We run fast browser checks first. Hard failures stop the demo; quality issues become review scenarios.</p>
+        <label class="drop-zone">
+          <input id="documentFile" type="file" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" />
+          <span>Choose PDF, JPG, or PNG</span>
+          <small>50 MB max. Backend still treats this as mock processing.</small>
+        </label>
+        <div id="validationResults" class="validation-results"></div>
+        <button class="primary" id="submitUploadButton" disabled>Submit document</button>
+      </div>
+    </template>
+
+    <template id="providerTemplate">
+      <div class="step">
+        <span class="eyebrow">Step 3 of 4</span>
+        <h2 id="providerTitle"></h2>
+        <p id="providerDescription"></p>
+        <div class="provider-rail" id="providerRail"></div>
+        <button class="primary" id="providerSubmitButton">Continue securely</button>
+      </div>
+    </template>
+
+    <template id="resultTemplate">
+      <div class="step result-step">
+        <span class="eyebrow">Step 4 of 4</span>
+        <h2 id="resultTitle"></h2>
+        <p id="resultDescription"></p>
+        <div id="resultCard" class="result-card"></div>
+        <button class="primary" data-next-step="method">Start another scenario</button>
+      </div>
+    </template>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
