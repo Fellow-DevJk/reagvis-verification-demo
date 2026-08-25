@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Reagvis Verification Demo</title>
+    <title>Reagvis Verification Console</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -19,7 +19,7 @@
           <span class="brand-mark">R</span>
           <span>
             <strong>Reagvis</strong>
-            <small>verification demo</small>
+            <small>meridian-bank</small>
           </span>
         </a>
 
@@ -46,15 +46,15 @@
       <main>
         <section class="hero">
           <div>
-            <span class="eyebrow">Plug-and-play provider readiness</span>
-            <h1>One verification journey, three provider rails.</h1>
+            <span class="eyebrow">Console</span>
+            <h1>Overview</h1>
             <p>
-              Show how an applicant verifies, what a customer sees, and what Reagvis operators monitor while
-              DigiLocker, Aadhaar e-KYC, and manual uploads remain replaceable provider adapters.
+              One integration, every rail. Volume, outcomes, provider health, applicant journey, and internal
+              review operations for meridian-bank.
             </p>
           </div>
           <div class="hero-card">
-            <span>Live demo API</span>
+            <span>Sandbox API</span>
             <code id="heroEndpoint">loading...</code>
             <div class="button-stack compact">
               <button id="seedDemoButton">Seed clean storyline</button>
@@ -82,10 +82,10 @@
             </article>
 
             <aside class="panel">
-              <span class="eyebrow">Demo controls</span>
-              <h3>Pick the outcome we want to tell</h3>
+              <span class="eyebrow">Sandbox</span>
+              <h3>Trigger a verification path</h3>
               <p>
-                The backend result is deterministic. Good upload quality maps to a success scenario; weak capture
+                The result is deterministic. Good upload quality maps to a success scenario; weak capture
                 quality maps to manual review; provider rail problems map to explicit failures.
               </p>
               <div class="button-stack">
@@ -154,15 +154,15 @@
         <div class="method-list">
           <button data-provider="digilocker">
             <strong>DigiLocker</strong>
-            <small>Mock OAuth consent and signed document retrieval.</small>
+            <small>OAuth consent and signed document retrieval through the sandbox rail.</small>
           </button>
           <button data-provider="aadhaar_ekyc">
             <strong>Aadhaar e-KYC</strong>
-            <small>Mock OTP/authentication and normalized identity result.</small>
+            <small>OTP/authentication and normalized identity result through the sandbox rail.</small>
           </button>
           <button data-provider="document_upload">
             <strong>Manual document upload</strong>
-            <small>Local quality checks before mock backend verification.</small>
+            <small>Local quality checks before backend verification.</small>
           </button>
         </div>
       </div>
@@ -172,11 +172,11 @@
       <div class="step">
         <span class="eyebrow">Step 3 of 4</span>
         <h2>Upload your ID document</h2>
-        <p>We run fast browser checks first. Hard failures stop the demo; quality issues become review scenarios.</p>
+        <p>We run fast browser checks first. Hard failures stop submission; quality issues become review scenarios.</p>
         <label class="drop-zone">
           <input id="documentFile" type="file" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" />
           <span>Choose PDF, JPG, or PNG</span>
-          <small>50 MB max. Backend still treats this as mock processing.</small>
+          <small>50 MB max. The server still re-checks before a final decision.</small>
         </label>
         <div id="validationResults" class="validation-results"></div>
         <button class="primary" id="submitUploadButton" disabled>Submit document</button>

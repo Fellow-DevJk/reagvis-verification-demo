@@ -381,7 +381,7 @@ async function refreshClientDashboard() {
       <div class="dashboard-card">
         <h3>Provider health</h3>
         <div class="table">
-          ${data.provider_health.map((item) => row(item.label, item.mode, `${item.volume} sessions`)).join("")}
+          ${data.provider_health.map((item) => row(item.label, item.mode === "mock" ? "Sandbox" : item.mode, `${item.volume} sessions`)).join("")}
         </div>
       </div>
       <div class="dashboard-card">
