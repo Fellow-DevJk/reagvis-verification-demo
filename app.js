@@ -269,6 +269,12 @@ function estimateBrightness(image) {
 }
 
 function renderValidation(result) {
+  const file = result.file;
+  const scanner = $("#uploadScannerPanel");
+  if (scanner) {
+    scanner.className = `scanner-shell scanner-${uploadOutcome(result)}`;
+    scanner.innerHTML = scannerResultMarkup(result, file);
+  }
   $("#validationResults").innerHTML = `
     ${result.checks.map((check) => `
       <div class="validation-item ${check.status}">
@@ -279,6 +285,97 @@ function renderValidation(result) {
     ${result.hardFailed ? `<div class="validation-item fail"><span class="dot"></span><span><strong>Submission blocked</strong><br>Choose another file or run this outcome from Sandbox.</span></div>` : ""}
   `;
   $("#submitUploadButton").disabled = result.hardFailed;
+}
+
+function renderScannerLoading(file, previewUrl) {
+  const scanner = $("#uploadScannerPanel");
+  if (!scanner) return;
+  scanner.className = "scanner-shell scanner-scanning";
+  scanner.innerHTML = `
+    ${scannerDocumentMarkup(file, previewUrl)}
+    <div class="scanner-copy">
+      <strong>Scanning document</strong>
+      <small>${escapeHtml(file.name)} is being checked for type, signature, readability, and capture quality.</small>
+      <div class="scan-stages">
+        ${scanStage("queued", "Upload intake", "done")}
+        ${scanStage("active", "Signature check", "active")}
+        ${scanStage("active", "Quality scan", "active")}
+        ${scanStage("queued", "Decision route", "queued")}
+      </div>
+    </div>
+  `;
+}
+
+function scannerResultMarkup(result, file) {
+  const outcome = uploadOutcome(result);
+  const title = outcome === "fail" ? "Document blocked" : outcome === "warn" ? "Review likely" : "Ready to submit";
+  const detail = outcome === "fail"
+    ? "A hard intake check failed before backend processing."
+    : outcome === "warn"
+      ? "The document can be submitted, but quality signals route it to manual review."
+      : "Browser checks passed. The backend will still revalidate before a final result.";
+  return `
+    ${scannerDocumentMarkup(file, result.previewUrl)}
+    <div class="scanner-copy">
+      <strong>${title}</strong>
+      <small>${escapeHtml(detail)}</small>
+      <div class="scan-stages">
+        ${scanStage("done", "Upload intake", "done")}
+        ${scanStage(result.checks.find((check) => check.id === "signature")?.status || "done", "Signature check")}
+        ${scanStage(result.warned ? "warn" : outcome, "Quality scan")}
+        ${scanStage(outcome, outcome === "fail" ? "Blocked" : outcome === "warn" ? "Review route" : "Provider route")}
+      </div>
+      <div class="file-meter">
+        <span style="width:${uploadConfidence(result)}%"></span>
+      </div>
+      <code>${escapeHtml(fileMeta(file))}</code>
+    </div>
+  `;
+}
+
+function scannerDocumentMarkup(file, previewUrl) {
+  const isImage = Boolean(previewUrl);
+  return `
+    <div class="scanner-preview">
+      <div class="scan-frame ${isImage ? "has-image" : "pdf-frame"}">
+        ${isImage
+          ? `<img src="${escapeHtml(previewUrl)}" alt="Selected document preview" />`
+          : `<div class="paper-ghost"><b>${escapeHtml((file.name.split(".").pop() || "DOC").toUpperCase())}</b><span></span><span></span><span></span></div>`}
+        <i class="scan-beam"></i>
+        <em class="corner top-left"></em>
+        <em class="corner top-right"></em>
+        <em class="corner bottom-left"></em>
+        <em class="corner bottom-right"></em>
+      </div>
+    </div>
+  `;
+}
+
+function scanStage(status, label, overrideStatus) {
+  const normalized = overrideStatus || status;
+  const className = normalized === "pass" ? "done" : normalized === "fail" ? "fail" : normalized === "warn" ? "warn" : normalized;
+  return `<span class="scan-stage ${className}">${escapeHtml(label)}</span>`;
+}
+
+function uploadOutcome(result) {
+  if (result.hardFailed) return "fail";
+  if (result.warned) return "warn";
+  return "pass";
+}
+
+function uploadConfidence(result) {
+  if (result.hardFailed) return 34;
+  if (result.warned) return 68;
+  return 96;
+}
+
+function fileMeta(file) {
+  return `${file.name} · ${(file.size / (1024 * 1024)).toFixed(2)} MB`;
+}
+
+function clearUploadPreview() {
+  if (state.upload?.previewUrl) URL.revokeObjectURL(state.upload.previewUrl);
+  state.upload = null;
 }
 
 async function createVerification({ provider, scenario, metadata = {} }) {
@@ -668,7 +765,7 @@ async function resetDemo() {
   if (!res.ok) throw new Error(`Reset failed: ${res.status}`);
   state.latestVerification = null;
   state.selectedVerification = null;
-  state.upload = null;
+  clearUploadPreview();
   renderStep("start");
   renderLiveTrace(null, $("#liveTrace"));
   await refreshCurrentDashboards();
@@ -779,7 +876,7 @@ document.addEventListener("click", async (event) => {
   if (event.target.id === "drawerCloseButton") $("#detailDrawer").classList.remove("open");
 
   if (event.target.id === "resetFlowButton") {
-    state.upload = null;
+    clearUploadPreview();
     state.latestVerification = null;
     renderStep("start");
     renderLiveTrace(null, $("#liveTrace"));
@@ -849,10 +946,13 @@ document.addEventListener("change", async (event) => {
   if (event.target.id !== "documentFile") return;
   const file = event.target.files?.[0];
   if (!file) return;
+  clearUploadPreview();
+  const previewUrl = file.type.startsWith("image/") ? URL.createObjectURL(file) : null;
+  renderScannerLoading(file, previewUrl);
   $("#validationResults").innerHTML = `<div class="validation-item processing"><span class="dot"></span><span>Running browser intake checks...</span></div>`;
-  const result = await validateDocument(file);
-  state.upload = { ...result, file };
-  renderValidation(result);
+  const [result] = await Promise.all([validateDocument(file), delay(850)]);
+  state.upload = { ...result, file, previewUrl };
+  renderValidation(state.upload);
 });
 
 window.addEventListener("hashchange", () => setView((location.hash || "#applicant").replace("#", "")));
