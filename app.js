@@ -7,6 +7,15 @@ const state = {
   view: "applicant",
   step: "start",
   provider: "digilocker",
+  applicant: {
+    full_name: "Priyanka Ramchandra Deshpande",
+    date_of_birth: "1991-08-14",
+    phone: "+91 98765 43210",
+    document_type: "Aadhaar",
+    document_number: "XXXX XXXX 1234",
+    address: "12 Palm Grove, Indiranagar, Bengaluru",
+    customer_reference: "MB-ONB-2048",
+  },
   upload: null,
   latestVerification: null,
   selectedVerification: null,
@@ -68,6 +77,29 @@ function cloneTemplate(id) {
   return document.importNode($(`#${id}`).content, true);
 }
 
+function fillApplicantForm(root = document) {
+  for (const [key, value] of Object.entries(state.applicant)) {
+    const input = $(`[name="${key}"]`, root);
+    if (input) input.value = value;
+  }
+}
+
+function captureApplicantForm() {
+  const form = $("#applicantForm");
+  if (!form) return state.applicant;
+  const data = new FormData(form);
+  state.applicant = {
+    full_name: String(data.get("full_name") || state.applicant.full_name).trim(),
+    date_of_birth: String(data.get("date_of_birth") || state.applicant.date_of_birth).trim(),
+    phone: String(data.get("phone") || state.applicant.phone).trim(),
+    document_type: String(data.get("document_type") || state.applicant.document_type).trim(),
+    document_number: String(data.get("document_number") || state.applicant.document_number).trim(),
+    address: String(data.get("address") || state.applicant.address).trim(),
+    customer_reference: String(data.get("customer_reference") || state.applicant.customer_reference).trim(),
+  };
+  return state.applicant;
+}
+
 function escapeHtml(value) {
   return String(value ?? "")
     .replaceAll("&", "&amp;")
@@ -104,6 +136,11 @@ function renderStep(step = state.step) {
   root.innerHTML = "";
 
   if (step === "start") root.append(cloneTemplate("startTemplate"));
+  if (step === "intake") {
+    const fragment = cloneTemplate("intakeTemplate");
+    fillApplicantForm(fragment);
+    root.append(fragment);
+  }
   if (step === "method") root.append(cloneTemplate("methodTemplate"));
   if (step === "upload") root.append(cloneTemplate("uploadTemplate"));
 
@@ -132,6 +169,7 @@ function renderStep(step = state.step) {
         <span><strong>${fmtStatus(status)}</strong><br><code>${escapeHtml(record?.verification_id || "pending")}</code></span>
       </div>
       ${Object.entries(detail).map(([name, check]) => checkRow(name, check)).join("")}
+      ${extractedFieldsMarkup(record)}
     `;
     root.append(fragment);
     renderLiveTrace(record, $("#liveTrace"));
@@ -144,6 +182,44 @@ function checkRow(name, check) {
     <div class="validation-item ${tone}">
       <span class="dot"></span>
       <span><strong>${escapeHtml(name.replaceAll("_", " "))}</strong><br>${escapeHtml(check.status)}${check.note ? ` - ${escapeHtml(check.note)}` : ""}</span>
+    </div>
+  `;
+}
+
+function extractedFieldsMarkup(record) {
+  const fields = record?.normalized_result?.extracted_fields || record?.extraction_result?.fields || [];
+  if (!fields.length) return "";
+  return `
+    <div class="extracted-fields">
+      <strong>Extracted fields</strong>
+      ${fields.slice(0, 4).map(extractedFieldRow).join("")}
+    </div>
+  `;
+}
+
+function extractedFieldRow(field) {
+  const tone = field.match === "match" ? "pass" : field.match === "mismatch" ? "fail" : field.match === "needs_review" ? "warn" : "processing";
+  const extracted = field.extracted || "Not available";
+  return `
+    <div class="field-row ${tone}">
+      <span>
+        <small>${escapeHtml(field.label || field.field)}</small>
+        <strong>${escapeHtml(extracted)}</strong>
+      </span>
+      <code>${escapeHtml(field.confidence ?? 0)}%</code>
+    </div>
+  `;
+}
+
+function applicantProfileMarkup(record) {
+  const profile = record?.applicant_profile;
+  if (!profile) return "";
+  return `
+    <div class="profile-card">
+      <span class="eyebrow">Applicant</span>
+      <strong>${escapeHtml(profile.full_name)}</strong>
+      <small>${escapeHtml(profile.document_type)} · ${escapeHtml(profile.document_number)} · ${escapeHtml(profile.phone)}</small>
+      <p>${escapeHtml(profile.address)}</p>
     </div>
   `;
 }
@@ -379,6 +455,7 @@ function clearUploadPreview() {
 }
 
 async function createVerification({ provider, scenario, metadata = {} }) {
+  const applicant = state.applicant;
   const res = await fetch(`${API_BASE}/v1/verifications`, {
     method: "POST",
     headers: { "content-type": "application/json" },
@@ -386,9 +463,10 @@ async function createVerification({ provider, scenario, metadata = {} }) {
       tenant_id: DEFAULT_TENANT,
       provider,
       scenario,
-      customer_reference: `MB-${String(Date.now()).slice(-5)}`,
+      customer_reference: applicant.customer_reference || `MB-${String(Date.now()).slice(-5)}`,
       checks: provider === "document_upload" ? ["identity", "document"] : ["identity"],
-      metadata,
+      applicant,
+      metadata: { ...metadata, applicant_name: applicant.full_name },
     }),
   });
   if (!res.ok) throw new Error(`Create failed: ${res.status} ${await res.text()}`);
@@ -646,7 +724,7 @@ function verificationRow(item) {
 }
 
 function providerHealthRow(item) {
-  return `<div class="row" role="button" tabindex="0" data-provider-detail="${escapeHtml(item.provider)}"><span>${escapeHtml(item.label)}</span><small>${item.mode === "mock" ? "Configured" : escapeHtml(item.mode)}</small><code>${escapeHtml(item.volume)} sessions</code></div>`;
+  return `<div class="row" role="button" tabindex="0" data-provider-detail="${escapeHtml(item.provider)}"><span>${escapeHtml(item.label)}</span><small>${escapeHtml(providerModeLabel(item.mode))}</small><code>${escapeHtml(item.volume)} sessions</code></div>`;
 }
 
 function providerCard(item) {
@@ -655,7 +733,7 @@ function providerCard(item) {
     <button class="provider-card ${meta.accent}" data-provider-detail="${escapeHtml(item.provider)}">
       <span>${escapeHtml(meta.short)}</span>
       <strong>${escapeHtml(item.label)}</strong>
-      <small>${item.mode === "mock" ? "Provider-ready rail" : escapeHtml(item.mode)} · ${escapeHtml(item.volume)} sessions · ${escapeHtml(item.median_latency_ms)}ms median</small>
+      <small>${escapeHtml(providerModeLabel(item.mode))} rail · ${escapeHtml(item.volume)} sessions · ${escapeHtml(item.median_latency_ms)}ms median</small>
     </button>
   `;
 }
@@ -678,8 +756,12 @@ function casePreview(item) {
         <small>Quality warning overlay</small>
       </div>
       <div>
-        <p><strong>${escapeHtml(item.customer_reference)}</strong></p>
-        <p class="muted-copy">${escapeHtml(providerLabel(item.provider))} · ${escapeHtml(item.scenario)}</p>
+        <p><strong>${escapeHtml(item.applicant_name || item.customer_reference)}</strong></p>
+        <p class="muted-copy">${escapeHtml(item.document_type || providerLabel(item.provider))} · ${escapeHtml(item.customer_reference)}</p>
+        <div class="review-signal">
+          <span>Confidence</span>
+          <strong>${escapeHtml(item.confidence ?? "--")}%</strong>
+        </div>
         <div class="decision-row">
           <button class="primary" data-review-decision="approved" data-review-id="${escapeHtml(item.verification_id)}">Approve</button>
           <button class="ghost" data-review-decision="rejected" data-review-id="${escapeHtml(item.verification_id)}">Reject</button>
@@ -692,6 +774,11 @@ function casePreview(item) {
 
 function providerLabel(provider) {
   return providers[provider]?.label || provider;
+}
+
+function providerModeLabel(mode) {
+  if (mode === "mock" || mode === "configured") return "Configured";
+  return String(mode || "Configured").replaceAll("_", " ").replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
 function loading(text) {
@@ -724,6 +811,7 @@ function renderDrawer(record) {
     <span class="eyebrow">Verification detail</span>
     <h2>${escapeHtml(record.customer_reference)}</h2>
     <div class="validation-item ${record.status}"><span class="dot"></span><span><strong>${fmtStatus(record.status)}</strong><br><code>${escapeHtml(record.verification_id)}</code></span></div>
+    ${applicantProfileMarkup(record)}
     <div class="drawer-actions">
       <button class="primary" data-go-trace="${escapeHtml(record.verification_id)}">Open trace</button>
       <button class="ghost" data-copy-id="${escapeHtml(record.verification_id)}">Copy ID</button>
@@ -736,6 +824,7 @@ function renderDrawer(record) {
     ` : ""}
     <h3>Normalized result</h3>
     <div class="result-card">${Object.entries(checks).map(([name, check]) => checkRow(name, check)).join("") || "<p>No terminal result yet.</p>"}</div>
+    ${extractedFieldsMarkup(record)}
     <h3>Provider transaction</h3>
     <pre>${escapeHtml(JSON.stringify({
       provider: record.provider,
@@ -812,6 +901,11 @@ async function fetchJson(path) {
 document.addEventListener("click", async (event) => {
   const next = event.target.closest("[data-next-step]");
   if (next) renderStep(next.dataset.nextStep);
+
+  if (event.target.id === "saveApplicantButton") {
+    captureApplicantForm();
+    renderStep("method");
+  }
 
   const providerButton = event.target.closest("[data-provider]");
   if (providerButton) {
@@ -953,6 +1047,13 @@ document.addEventListener("change", async (event) => {
   const [result] = await Promise.all([validateDocument(file), delay(850)]);
   state.upload = { ...result, file, previewUrl };
   renderValidation(state.upload);
+});
+
+document.addEventListener("submit", (event) => {
+  if (event.target.id !== "applicantForm") return;
+  event.preventDefault();
+  captureApplicantForm();
+  renderStep("method");
 });
 
 window.addEventListener("hashchange", () => setView((location.hash || "#applicant").replace("#", "")));

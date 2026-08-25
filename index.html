@@ -209,7 +209,7 @@
 
     <template id="startTemplate">
       <div class="step">
-        <span class="eyebrow">Step 1 of 4</span>
+        <span class="eyebrow">Step 1 of 5</span>
         <h2>Let's confirm it's you</h2>
         <p>Meridian Bank uses Reagvis to verify your identity before account activation.</p>
         <ul class="check-list">
@@ -217,13 +217,57 @@
           <li>Use Aadhaar e-KYC when OTP authentication is available.</li>
           <li>Upload a document when assisted document review is preferred.</li>
         </ul>
-        <button class="primary" data-next-step="method">Get started</button>
+        <button class="primary" data-next-step="intake">Get started</button>
+      </div>
+    </template>
+
+    <template id="intakeTemplate">
+      <div class="step">
+        <span class="eyebrow">Step 2 of 5</span>
+        <h2>Applicant details</h2>
+        <p>These fields become the expected values that Reagvis compares with provider or document results.</p>
+        <form id="applicantForm" class="intake-form">
+          <label>
+            <span>Full name</span>
+            <input name="full_name" autocomplete="name" />
+          </label>
+          <label>
+            <span>Date of birth</span>
+            <input name="date_of_birth" type="date" />
+          </label>
+          <label>
+            <span>Phone</span>
+            <input name="phone" autocomplete="tel" />
+          </label>
+          <label>
+            <span>Customer ref</span>
+            <input name="customer_reference" />
+          </label>
+          <label>
+            <span>Document type</span>
+            <select name="document_type">
+              <option>Aadhaar</option>
+              <option>PAN</option>
+              <option>Passport</option>
+              <option>Driving licence</option>
+            </select>
+          </label>
+          <label>
+            <span>Document number</span>
+            <input name="document_number" />
+          </label>
+          <label class="wide">
+            <span>Address</span>
+            <textarea name="address" rows="3"></textarea>
+          </label>
+        </form>
+        <button class="primary" id="saveApplicantButton">Continue</button>
       </div>
     </template>
 
     <template id="methodTemplate">
       <div class="step">
-        <span class="eyebrow">Step 2 of 4</span>
+        <span class="eyebrow">Step 3 of 5</span>
         <h2>Choose a verification method</h2>
         <div class="method-list">
           <button data-provider="digilocker">
@@ -244,7 +288,7 @@
 
     <template id="uploadTemplate">
       <div class="step">
-        <span class="eyebrow">Step 3 of 4</span>
+        <span class="eyebrow">Step 4 of 5</span>
         <h2>Upload your ID document</h2>
         <p>We run fast browser checks first. Hard failures stop submission; quality issues become review scenarios.</p>
         <label class="drop-zone">
@@ -272,7 +316,7 @@
 
     <template id="providerTemplate">
       <div class="step">
-        <span class="eyebrow">Step 3 of 4</span>
+        <span class="eyebrow">Step 4 of 5</span>
         <h2 id="providerTitle"></h2>
         <p id="providerDescription"></p>
         <div class="provider-rail" id="providerRail"></div>
@@ -282,7 +326,7 @@
 
     <template id="resultTemplate">
       <div class="step result-step">
-        <span class="eyebrow">Step 4 of 4</span>
+        <span class="eyebrow">Step 5 of 5</span>
         <h2 id="resultTitle"></h2>
         <p id="resultDescription"></p>
         <div id="resultCard" class="result-card"></div>

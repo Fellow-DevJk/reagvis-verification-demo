@@ -4,11 +4,11 @@ Static, web-only preview for the provider-agnostic verification platform.
 
 It shows these views:
 
-- Applicant flow: DigiLocker, Aadhaar e-KYC, and manual-upload rails.
+- Applicant flow: applicant details, DigiLocker, Aadhaar e-KYC, and manual-upload rails.
 - Overview: customer-facing summary, lifecycle counts, provider health, and recent sessions.
 - Live trace: request-to-result path across gateway, engine, connector, provider, result, and webhook.
 - Providers: provider registry/configuration readiness.
-- Verifications: clickable session list with status filters.
+- Verifications: clickable session list with applicant profile and extracted-field detail.
 - Webhooks: simulated customer delivery log.
 - Scenario lab: repeatable walkthrough launcher.
 - Audit log: audit-event timeline.
@@ -21,7 +21,7 @@ This backend is preview-only. It uses controlled provider responses, isolated de
 ## Presenting It
 
 1. Click `Load sample caseload` before a walkthrough.
-2. Start in `Applicant flow` and run either a clean provider success or a manual-upload review scenario.
+2. Start in `Applicant flow`, confirm the prefilled applicant details, and run either a clean provider success or a manual-upload review scenario.
 3. Open `Overview` to show the customer-facing dashboard.
 4. Click any verification row to open the detail drawer.
 5. Use `Open trace` from the drawer, or go to `Live trace`, to show the provider-adapter journey.
