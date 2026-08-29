@@ -59,14 +59,17 @@
               review operations for meridian-bank.
             </p>
           </div>
-          <div class="hero-card">
-            <span>Live Workflow</span>
-            <strong id="heroEndpoint">Verification service</strong>
-            <div class="button-stack compact">
+          <details class="hero-card seed-card">
+            <summary>
+              <span>Live Workflow</span>
+              <strong id="heroEndpoint">Verification service</strong>
+              <small>Open caseload tools</small>
+            </summary>
+            <div class="button-stack compact seed-actions">
               <button id="seedDemoButton">Load sample caseload</button>
               <button id="resetDemoButton">Reset caseload</button>
             </div>
-          </div>
+          </details>
         </section>
 
         <section id="applicant" class="view active">
@@ -87,32 +90,17 @@
               <div class="phone-body" id="phoneBody"></div>
             </article>
 
-            <aside class="panel">
-              <span class="eyebrow">Presenter controls</span>
-              <h3>Trigger a verification path</h3>
-              <p>
-                The result is controlled for repeatable walkthroughs. Good upload quality maps to a success scenario; weak capture
-                quality maps to manual review; provider rail problems map to explicit failures.
-              </p>
-              <div class="button-stack">
-                <button data-quick-run="success">Run clean success</button>
-                <button data-quick-run="document_blurry">Run upload quality review</button>
-                <button data-quick-run="aadhaar_auth_failed">Run Aadhaar auth failure</button>
-                <button data-quick-run="provider_timeout">Run provider timeout</button>
+            <article class="trace-panel applicant-trace-panel">
+              <div class="section-head">
+                <div>
+                  <span class="eyebrow">Live trace</span>
+                  <h2>Verification in flight</h2>
+                </div>
+                <button class="ghost" id="replayLatestButton">Replay latest</button>
               </div>
-            </aside>
+              <div id="liveTrace"></div>
+            </article>
           </div>
-
-          <article class="trace-panel">
-            <div class="section-head">
-              <div>
-                <span class="eyebrow">Live trace</span>
-                <h2>Verification in flight</h2>
-              </div>
-              <button class="ghost" id="replayLatestButton">Replay latest</button>
-            </div>
-            <div id="liveTrace"></div>
-          </article>
         </section>
 
         <section id="overview" class="view">
@@ -321,6 +309,27 @@
         <p id="providerDescription"></p>
         <div class="provider-rail" id="providerRail"></div>
         <button class="primary" id="providerSubmitButton">Continue securely</button>
+      </div>
+    </template>
+
+    <template id="processingTemplate">
+      <div class="step processing-step">
+        <span class="eyebrow">Step 5 of 5</span>
+        <h2 id="processingTitle">Verifying your details</h2>
+        <p id="processingDescription">
+          Reagvis is routing the request, checking the provider response, and preparing a normalized result.
+        </p>
+        <div class="processing-card">
+          <div class="processing-orb">
+            <span></span>
+            <i></i>
+          </div>
+          <div class="scanner-copy">
+            <strong id="processingRail">Verification in progress</strong>
+            <small>This usually takes a few seconds. Please keep this page open.</small>
+            <div class="scan-stages" id="processingStages"></div>
+          </div>
+        </div>
       </div>
     </template>
 

@@ -143,6 +143,24 @@ function renderStep(step = state.step) {
   }
   if (step === "method") root.append(cloneTemplate("methodTemplate"));
   if (step === "upload") root.append(cloneTemplate("uploadTemplate"));
+  if (step === "processing") {
+    const fragment = cloneTemplate("processingTemplate");
+    const provider = providers[state.provider] || providers.digilocker;
+    $("#processingTitle", fragment).textContent = state.provider === "document_upload"
+      ? "Scanning and submitting document"
+      : `Connecting to ${provider.label}`;
+    $("#processingDescription", fragment).textContent = state.provider === "document_upload"
+      ? "Reagvis is submitting the checked document, routing it through intake, and preparing the verification result."
+      : "Reagvis is creating the verification, routing it through the selected provider rail, and waiting for the normalized result.";
+    $("#processingRail", fragment).textContent = `${provider.label} verification in progress`;
+    $("#processingStages", fragment).innerHTML = [
+      scanStage("done", "Applicant consent", "done"),
+      scanStage("active", state.provider === "document_upload" ? "Document intake" : `${provider.label} request`, "active"),
+      scanStage("active", "Normalize result", "active"),
+      scanStage("queued", "Dashboard update", "queued"),
+    ].join("");
+    root.append(fragment);
+  }
 
   if (step === "provider") {
     const fragment = cloneTemplate("providerTemplate");
@@ -491,7 +509,15 @@ function delay(ms) {
 
 async function runApplicantScenario(provider, scenario, metadata = {}) {
   state.provider = provider;
-  renderStep(provider === "document_upload" ? "upload" : "provider");
+  renderStep("processing");
+  renderLiveTrace({
+    provider,
+    status: "processing",
+    trace_events: [
+      { event: "verification.created", state: "processing", occurred_at: new Date().toISOString() },
+      { event: "provider.requested", state: provider, occurred_at: new Date().toISOString() },
+    ],
+  }, $("#liveTrace"));
   state.latestVerification = await createVerification({ provider, scenario, metadata });
   state.selectedVerification = state.latestVerification;
   renderStep("result");
@@ -911,19 +937,6 @@ document.addEventListener("click", async (event) => {
   if (providerButton) {
     state.provider = providerButton.dataset.provider;
     renderStep(state.provider === "document_upload" ? "upload" : "provider");
-  }
-
-  const quick = event.target.closest("[data-quick-run]");
-  if (quick) {
-    const scenario = quick.dataset.quickRun;
-    const provider = scenario.startsWith("aadhaar") ? "aadhaar_ekyc" : scenario === "document_blurry" ? "document_upload" : "digilocker";
-    quick.disabled = true;
-    try {
-      await runApplicantScenario(provider, scenario, { source: "quick-run" });
-      setView("applicant");
-    } finally {
-      quick.disabled = false;
-    }
   }
 
   const sandboxRun = event.target.closest("[data-sandbox-run]");
